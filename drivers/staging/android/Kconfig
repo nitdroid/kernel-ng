@@ -7,7 +7,7 @@ config ANDROID
 	  Enable support for various drivers needed on the Android platform
 
 config ANDROID_BINDER_IPC
-	tristate "Android Binder IPC Driver"
-	default y
+	bool "Android Binder IPC Driver"
+	default n
 
 endmenu
