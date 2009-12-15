@@ -338,14 +338,14 @@ EXPORT_SYMBOL(strnchr);
 #endif
 
 /**
- * strstrip - Removes leading and trailing whitespace from @s.
+ * strim - Removes leading and trailing whitespace from @s.
  * @s: The string to be stripped.
  *
  * Note that the first trailing whitespace is replaced with a %NUL-terminator
  * in the given string @s. Returns a pointer to the first non-whitespace
  * character in @s.
  */
-char *strstrip(char *s)
+char *strim(char *s)
 {
 	size_t size;
 	char *end;
@@ -365,7 +365,7 @@ char *strstrip(char *s)
 
 	return s;
 }
-EXPORT_SYMBOL(strstrip);
+EXPORT_SYMBOL(strim);
 
 #ifndef __HAVE_ARCH_STRLEN
 /**
