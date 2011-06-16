@@ -18,10 +18,9 @@
 #include <asm/i387.h>
 #include <asm/ds.h>
 
-unsigned long idle_halt;
-EXPORT_SYMBOL(idle_halt);
-unsigned long idle_nomwait;
-EXPORT_SYMBOL(idle_nomwait);
+#ifdef CONFIG_X86_64
+static DEFINE_PER_CPU(unsigned char, is_idle);
+#endif
 
 struct kmem_cache *task_xstate_cachep;
 
@@ -251,6 +250,99 @@ EXPORT_SYMBOL(pm_idle);
 static inline int hlt_use_halt(void)
 {
 	return 1;
+}
+
+#ifndef CONFIG_SMP
+static inline void play_dead(void)
+{
+	BUG();
+}
+#endif
+
+#ifdef CONFIG_X86_64
+void enter_idle(void)
+{
+	percpu_write(is_idle, 1);
+	idle_notifier_call_chain(IDLE_START);
+}
+
+static void __exit_idle(void)
+{
+	if (x86_test_and_clear_bit_percpu(0, is_idle) == 0)
+		return;
+	idle_notifier_call_chain(IDLE_END);
+}
+
+/* Called from interrupts to signify idle end */
+void exit_idle(void)
+{
+	/* idle loop has pid 0 */
+	if (current->pid)
+		return;
+	__exit_idle();
+}
+#endif
+
+/*
+ * The idle thread. There's no useful work to be
+ * done, so just try to conserve power and have a
+ * low exit latency (ie sit in a loop waiting for
+ * somebody to say that they'd like to reschedule)
+ */
+void cpu_idle(void)
+{
+	/*
+	 * If we're the non-boot CPU, nothing set the stack canary up
+	 * for us.  CPU0 already has it initialized but no harm in
+	 * doing it again.  This is a good place for updating it, as
+	 * we wont ever return from this function (so the invalid
+	 * canaries already on the stack wont ever trigger).
+	 */
+	boot_init_stack_canary();
+	current_thread_info()->status |= TS_POLLING;
+
+	while (1) {
+		tick_nohz_idle_enter();
+
+		while (!need_resched()) {
+			rmb();
+
+			if (cpu_is_offline(smp_processor_id()))
+				play_dead();
+
+			/*
+			 * Idle routines should keep interrupts disabled
+			 * from here on, until they go to idle.
+			 * Otherwise, idle callbacks can misfire.
+			 */
+			local_touch_nmi();
+			local_irq_disable();
+
+			enter_idle();
+
+			/* Don't trace irqs off for idle */
+			stop_critical_timings();
+
+			/* enter_idle() needs rcu for notifiers */
+			rcu_idle_enter();
+
+			if (cpuidle_idle_call())
+				pm_idle();
+
+			rcu_idle_exit();
+			start_critical_timings();
+
+			/* In many cases the interrupt that ended idle
+			   has already called exit_idle. But some idle
+			   loops can be woken up without interrupt. */
+			__exit_idle();
+		}
+
+		tick_nohz_idle_exit();
+		preempt_enable_no_resched();
+		schedule();
+		preempt_disable();
+	}
 }
 
 /*
