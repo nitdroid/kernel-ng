@@ -156,11 +156,8 @@ struct usb_ep {
  * usb_ep_enable - configure endpoint, making it usable
  * @ep:the endpoint being configured.  may not be the endpoint named "ep0".
  *	drivers discover endpoints through the ep_list of a usb_gadget.
- * @desc:descriptor for desired behavior.  caller guarantees this pointer
- *	remains valid until the endpoint is disabled; the data byte order
- *	is little-endian (usb-standard).
  *
- * when configurations are set, or when interface settings change, the driver
+ * When configurations are set, or when interface settings change, the driver
  * will enable or disable the relevant endpoints.  while it is enabled, an
  * endpoint may be used for i/o until the driver receives a disconnect() from
  * the host or until the endpoint is disabled.
@@ -175,10 +172,9 @@ struct usb_ep {
  *
  * returns zero, or a negative error code.
  */
-static inline int usb_ep_enable(struct usb_ep *ep,
-				const struct usb_endpoint_descriptor *desc)
+static inline int usb_ep_enable(struct usb_ep *ep)
 {
-	return ep->ops->enable(ep, desc);
+	return ep->ops->enable(ep, ep->desc);
 }
 
 /**
