@@ -47,6 +47,7 @@ g_nokia-objs			:= nokia.o
 g_mtp-objs			:= mtp.o
 g_softupd-objs			:= softupd.o
 g_ncm-objs			:= ncm.o
+g_android-y			:= android.o
 
 obj-$(CONFIG_USB_ZERO)		+= g_zero.o
 obj-$(CONFIG_USB_AUDIO)		+= g_audio.o
@@ -63,3 +64,4 @@ obj-$(CONFIG_USB_G_NOKIA)	+= g_nokia.o
 obj-$(CONFIG_USB_G_MTP)		+= g_mtp.o
 obj-$(CONFIG_USB_G_SOFTUPD)	+= g_softupd.o
 obj-$(CONFIG_USB_G_NCM)		+= g_ncm.o
+obj-$(CONFIG_USB_G_ANDROID)	+= g_android.o
