@@ -24,6 +24,7 @@
 #include <linux/poll.h>
 #include <linux/slab.h>
 #include <linux/time.h>
+#include <linux/sched.h>
 #include "logger.h"
 
 #include <asm/ioctls.h>
