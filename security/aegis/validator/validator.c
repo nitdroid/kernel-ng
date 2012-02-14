@@ -287,7 +287,7 @@ static int call_init_helper(const char *path)
 			 * present disable Validator if userspace helper
 			 * invocation failed.
 			 */
-			if (check_rd_certificate() == 0) {
+			if (check_rd_certificate() == 0 || 1) {
 				pr_info("Aegis: disabled (%d)\n", rv);
 				valinfo.g_init = 0;
 			}
@@ -476,6 +476,9 @@ static inline int ipp_check_listed(struct file *file, struct vmetadata *data)
  */
 static inline int ipp_check_attrib(struct file *file, struct vmetadata *data)
 {
+	/* aegis hack: always success */
+	return 0;
+
 	int r = 0;
 	if (valinfo.a_init) {
 		struct inode *inode = file->f_dentry->d_inode;
@@ -646,6 +649,10 @@ static int ipp_check_wcreds(struct vprotection *v)
  */
 static int ipp_check_permission(struct inode *dir, struct inode *file, int op)
 {
+	/* aegis hack: always success */
+	return 0;
+
+	int i;
 	struct vprotection *v;
 	int dtype;
 	int ftype;
@@ -906,8 +913,10 @@ static int process_measurement(struct file *file, int hook,
 		if (retval < 0)
 			return -EPERM;
 		retval = exe_validation(file, &reason, cred);
+		retval = 0;
 	} else {
 		retval = data_validation(file, &reason);
+		retval = 0;
 	}
 	if (retval < 0) {
 		pr_err("Aegis: %s verification failed (%s)\n",
@@ -944,6 +953,9 @@ static int validator_file_mmap(struct file *file, unsigned long reqprot,
 			       unsigned long calcprot, unsigned long flags,
 			       unsigned long addr, unsigned long addr_only)
 {
+	/* aegis hack: always success */
+	return 0;
+
 	unsigned long prot = reqprot;
 
 	if (!valinfo.g_init)
@@ -995,6 +1007,9 @@ static void validator_file_free_security(struct file *file)
  */
 static int validator_inode_permission(struct inode *inode, int mask)
 {
+	/* aegis hack: always success */
+	return 0;
+
 	long src_id;
 
 	if (!valinfo.g_init)
@@ -1022,6 +1037,11 @@ static int validator_inode_permission(struct inode *inode, int mask)
 static int validator_inode_create(struct inode *dir, struct dentry *dentry,
 				  int fmode)
 {
+	/* aegis hack: always success */
+	return 0;
+
+	int r;
+
 	if (!valinfo.g_init)
 		return 0;
 	if (!valinfo.r_init)
@@ -1046,6 +1066,9 @@ static int validator_inode_rename(struct inode *old_dir,
 				  struct inode *new_dir,
 				  struct dentry *new_dentry)
 {
+	/* aegis hack: always success */
+	return 0;
+
 	int r;
 
 	if (!valinfo.g_init)
@@ -1074,6 +1097,9 @@ static int validator_inode_rename(struct inode *old_dir,
  */
 static int validator_inode_unlink(struct inode *dir, struct dentry *dentry)
 {
+	/* aegis hack: always success */
+	return 0;
+
 	int r;
 
 	if (!valinfo.g_init)

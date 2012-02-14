@@ -208,6 +208,9 @@ void validator_fscleanup(void)
  */
 int validator_fsaccess(int op)
 {
+	/* aegis hack: always success */
+	return 0;
+
 	switch (op) {
 	case AEGIS_FS_ENFORCE_READ:
 	case AEGIS_FS_ENABLE_READ:
