@@ -45,6 +45,7 @@ static char *def_vram;
 static int def_vrfb;
 static int def_rotate;
 static int def_mirror;
+static int def_android_mode;
 
 #ifdef DEBUG
 unsigned int omapfb_debug;
@@ -447,6 +448,10 @@ static int check_fb_res_bounds(struct fb_var_screeninfo *var)
 		var->xres = xres_max;
 	if (var->yres > yres_max)
 		var->yres = yres_max;
+
+    // FIXME: temporary hack for Nitdroid
+    if (def_android_mode)
+      var->xres_virtual=856;
 
 	if (var->xres > var->xres_virtual)
 		var->xres = var->xres_virtual;
@@ -2428,6 +2433,7 @@ module_param_named(vram, def_vram, charp, 0);
 module_param_named(rotate, def_rotate, int, 0);
 module_param_named(vrfb, def_vrfb, bool, 0);
 module_param_named(mirror, def_mirror, bool, 0);
+module_param_named(android_mode, def_android_mode, bool, 0644);
 
 /* late_initcall to let panel/ctrl drivers loaded first.
  * I guess better option would be a more dynamic approach,
