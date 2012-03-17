@@ -246,13 +246,13 @@ extern suspend_state_t requested_suspend_state;
 
 #ifdef CONFIG_USER_WAKELOCK
 ssize_t wake_lock_show(struct kobject *kobj, struct kobj_attribute *attr,
-                        char *buf);
+			char *buf);
 ssize_t wake_lock_store(struct kobject *kobj, struct kobj_attribute *attr,
-                        const char *buf, size_t n);
+			const char *buf, size_t n);
 ssize_t wake_unlock_show(struct kobject *kobj, struct kobj_attribute *attr,
-                        char *buf);
+			char *buf);
 ssize_t  wake_unlock_store(struct kobject *kobj, struct kobj_attribute *attr,
-                        const char *buf, size_t n);
+			const char *buf, size_t n);
 #endif
 
 #ifdef CONFIG_EARLYSUSPEND

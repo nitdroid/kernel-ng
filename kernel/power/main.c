@@ -147,7 +147,11 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 			   const char *buf, size_t n)
 {
 #ifdef CONFIG_SUSPEND
+#ifdef CONFIG_EARLYSUSPEND
+	suspend_state_t state = PM_SUSPEND_ON;
+#else
 	suspend_state_t state = PM_SUSPEND_STANDBY;
+#endif
 	const char * const *s;
 #endif
 	char *p;
@@ -169,7 +173,14 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 			break;
 	}
 	if (state < PM_SUSPEND_MAX && *s)
+#ifdef CONFIG_EARLYSUSPEND
+		if (state == PM_SUSPEND_ON || valid_state(state)) {
+			error = 0;
+			request_suspend_state(state);
+		}
+#else
 		error = enter_state(state);
+#endif
 #endif
 
  Exit:
@@ -217,10 +228,9 @@ static struct attribute * g[] = {
 	&pm_test_attr.attr,
 #endif
 #ifdef CONFIG_USER_WAKELOCK
-    &wake_lock_attr.attr,
-    &wake_unlock_attr.attr,
+	&wake_lock_attr.attr,
+	&wake_unlock_attr.attr,
 #endif
-
 	NULL,
 };
 
