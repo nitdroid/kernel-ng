@@ -580,7 +580,39 @@ static void copy_rtnl_link_stats(struct rtnl_link_stats *a,
 
 	a->rx_compressed = b->rx_compressed;
 	a->tx_compressed = b->tx_compressed;
-};
+}
+
+static void copy_rtnl_link_stats64(struct rtnl_link_stats64 *a,
+				   const struct net_device_stats *b)
+{
+	a->rx_packets = b->rx_packets;
+	a->tx_packets = b->tx_packets;
+	a->rx_bytes = b->rx_bytes;
+	a->tx_bytes = b->tx_bytes;
+	a->rx_errors = b->rx_errors;
+	a->tx_errors = b->tx_errors;
+	a->rx_dropped = b->rx_dropped;
+	a->tx_dropped = b->tx_dropped;
+
+	a->multicast = b->multicast;
+	a->collisions = b->collisions;
+
+	a->rx_length_errors = b->rx_length_errors;
+	a->rx_over_errors = b->rx_over_errors;
+	a->rx_crc_errors = b->rx_crc_errors;
+	a->rx_frame_errors = b->rx_frame_errors;
+	a->rx_fifo_errors = b->rx_fifo_errors;
+	a->rx_missed_errors = b->rx_missed_errors;
+
+	a->tx_aborted_errors = b->tx_aborted_errors;
+	a->tx_carrier_errors = b->tx_carrier_errors;
+	a->tx_fifo_errors = b->tx_fifo_errors;
+	a->tx_heartbeat_errors = b->tx_heartbeat_errors;
+	a->tx_window_errors = b->tx_window_errors;
+
+	a->rx_compressed = b->rx_compressed;
+	a->tx_compressed = b->tx_compressed;
+}
 
 static inline size_t if_nlmsg_size(const struct net_device *dev)
 {
@@ -667,6 +699,25 @@ static int rtnl_fill_ifinfo(struct sk_buff *skb, struct net_device *dev,
 	stats = dev_get_stats(dev);
 	copy_rtnl_link_stats(nla_data(attr), stats);
 
+	attr = nla_reserve(skb, IFLA_STATS64,
+			sizeof(struct rtnl_link_stats64));
+	if (attr == NULL)
+		goto nla_put_failure;
+
+	stats = dev_get_stats(dev);
+	copy_rtnl_link_stats64(nla_data(attr), stats);
+
+	if (dev->netdev_ops->ndo_get_vf_config && dev->dev.parent) {
+		int i;
+		struct ifla_vf_info ivi;
+
+		NLA_PUT_U32(skb, IFLA_NUM_VF, dev_num_vf(dev->dev.parent));
+		for (i = 0; i < dev_num_vf(dev->dev.parent); i++) {
+			if (dev->netdev_ops->ndo_get_vf_config(dev, i, &ivi))
+				break;
+			NLA_PUT(skb, IFLA_VFINFO, sizeof(ivi), &ivi);
+		}
+	}
 	if (dev->rtnl_link_ops) {
 		if (rtnl_link_fill(skb, dev) < 0)
 			goto nla_put_failure;
