@@ -43,6 +43,7 @@
 #include <linux/string.h>
 #include <linux/input/eci.h>
 #include <linux/pm_qos_params.h>
+#include <linux/switch.h>
 
 #define ACI_DRIVERNAME	"twl5031_aci"
 
@@ -233,6 +234,7 @@ struct twl5031_aci_data {
 
 	int			(*hw_plug_set_state)(struct device *dev,
 						bool plugged);
+	struct switch_dev sdev;
 };
 
 static int button = ACI_BT_UP;
@@ -1329,6 +1331,7 @@ static void twl5031_av_plug_on_off(struct twl5031_aci_data *aci)
 		dfl61_jack_report(0);
 		aci->detected = "AV jack removed";
 		dev_emerg(aci->dev, "%s\n", aci->detected);
+		switch_set_state(&aci->sdev, 0);
 		dfl61_request_hsmicbias(0);
 		twl5031_disable_pullups();
 
@@ -1368,16 +1371,19 @@ static void twl5031_report_accessory(struct twl5031_aci_data *aci)
 		twl5031_disable_pullups();
 		aci->detected = "SND_JACK_HEADPHONE";
 		dfl61_jack_report(SND_JACK_HEADPHONE);
+		switch_set_state(&aci->sdev, 1<<1);
 		break;
 	case ACI_AVOUT:
 		twl5031_disable_pullups();
 		aci->detected = "SND_JACK_AVOUT";
 		twl5031_aci_set_av_output(aci, ACI_VIDEO);
 		dfl61_jack_report(SND_JACK_AVOUT);
+		switch_set_state(&aci->sdev, 0);
 		break;
 	case ACI_HEADSET:
 		aci->detected = "SND_JACK_HEADSET";
 		dfl61_jack_report(SND_JACK_HEADSET);
+		switch_set_state(&aci->sdev, 1<<0);
 		aci->task = ACI_TASK_ENABLE_BUTTON;
 		queue_delayed_work(aci->aci_wq, &aci->aci_work,
 				msecs_to_jiffies(ACI_WAIT_PLUG_TO_BUTTONS));
@@ -1391,6 +1397,7 @@ static void twl5031_report_accessory(struct twl5031_aci_data *aci)
 		/* Now ECI accessory should be initialized, so check buttons */
 		aci->task = ACI_TASK_NONE;
 		twl5031_read_buttons(aci, ECI_BUTTONS_NOT_LATCHED);
+		switch_set_state(&aci->sdev, 1<<0);
 		break;
 	case ACI_OPEN_CABLE:
 		/*
@@ -1403,6 +1410,7 @@ static void twl5031_report_accessory(struct twl5031_aci_data *aci)
 		twl5031_disable_pullups();
 		aci->detected = "AV jack open cable as SND_JACK_LINEOUT";
 		dfl61_jack_report(SND_JACK_LINEOUT);
+		switch_set_state(&aci->sdev, 1<<1);
 
 		if (!aci->open_cable_redetect_enabled)
 			break;
@@ -1417,6 +1425,7 @@ static void twl5031_report_accessory(struct twl5031_aci_data *aci)
 	case ACI_CARKIT:
 		aci->detected = "Carkit as SND_JACK_HEADPHONE";
 		dfl61_jack_report(SND_JACK_HEADPHONE);
+		switch_set_state(&aci->sdev, 1<<1);
 		aci->task = ACI_TASK_ENABLE_BUTTON;
 		queue_delayed_work(aci->aci_wq, &aci->aci_work,
 				msecs_to_jiffies(ACI_WAIT_PLUG_TO_BUTTONS));
@@ -1425,6 +1434,7 @@ static void twl5031_report_accessory(struct twl5031_aci_data *aci)
 		twl5031_disable_pullups();
 		aci->detected = "Unknown AV accessory";
 		dfl61_jack_report(SND_JACK_MECHANICAL);
+		switch_set_state(&aci->sdev, 0);
 		break;
 	}
 	dev_emerg(aci->dev, "%s\n", aci->detected);
@@ -1899,6 +1909,16 @@ static int __init twl5031_aci_probe(struct platform_device *pdev)
 		goto err_jack_irq;
 	}
 
+	aci->sdev.name = "h2w";
+
+	ret = switch_dev_register(&aci->sdev);
+	if (ret < 0) {
+		printk(KERN_ERR "switch_dev_register h2w");
+		// FIXME goto err_switch_dev_register;
+	}
+
+	switch_set_state(&aci->sdev, 0);
+
 	/*
 	 * It seems to be necessary to wait here about a millisecond,
 	 * otherwise an interrupt gets lost. The reason is unknown.
@@ -1945,6 +1965,8 @@ static int __exit twl5031_aci_remove(struct platform_device *pdev)
 {
 	struct twl5031_aci_platform_data *pdata = pdev->dev.platform_data;
 	struct twl5031_aci_data *aci = platform_get_drvdata(pdev);
+
+	switch_dev_unregister(&aci->sdev);
 
 	twl5031_aci_disable_irqs(ACI_INTERNAL | ACI_ACCINT);
 	cancel_delayed_work_sync(&aci->aci_work);
