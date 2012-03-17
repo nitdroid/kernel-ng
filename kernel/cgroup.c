@@ -1684,6 +1684,7 @@ static int attach_task_by_pid(struct cgroup *cgrp, u64 pid)
 			return -ESRCH;
 		}
 
+#if 0
 		tcred = __task_cred(tsk);
 		if (cred->euid &&
 		    cred->euid != tcred->uid &&
@@ -1691,6 +1692,7 @@ static int attach_task_by_pid(struct cgroup *cgrp, u64 pid)
 			rcu_read_unlock();
 			return -EACCES;
 		}
+#endif
 		get_task_struct(tsk);
 		rcu_read_unlock();
 	} else {
