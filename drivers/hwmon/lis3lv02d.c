@@ -991,9 +991,10 @@ static void lis3lv02d_8b_configure(struct lis3lv02d *dev,
 
 		if (dev->idev) {
 			struct input_dev *input_dev = lis3_dev.idev->input;
-			input_set_capability(input_dev, EV_KEY, BTN_X);
-			input_set_capability(input_dev, EV_KEY, BTN_Y);
-			input_set_capability(input_dev, EV_KEY, BTN_Z);
+			// Don't tell to userland that we are capable act as keyboard.
+			//input_set_capability(input_dev, EV_KEY, BTN_X);
+			//input_set_capability(input_dev, EV_KEY, BTN_Y);
+			//input_set_capability(input_dev, EV_KEY, BTN_Z);
 		}
 	}
 
