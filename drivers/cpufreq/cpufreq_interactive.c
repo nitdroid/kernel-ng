@@ -34,6 +34,9 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_interactive.h>
 
+#define kstrtoul strict_strtoul
+#define kstrtol  strict_strtol
+
 static int active_count;
 
 struct cpufreq_interactive_cpuinfo {
@@ -327,7 +330,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 	if (cpufreq_frequency_table_target(pcpu->policy, pcpu->freq_table,
 					   new_freq, CPUFREQ_RELATION_L,
 					   &index)) {
-		pr_warn_once("timer %d: cpufreq_frequency_table_target error\n",
+		printk_once(KERN_WARNING "timer %d: cpufreq_frequency_table_target error\n",
 			     (int) data);
 		goto rearm;
 	}

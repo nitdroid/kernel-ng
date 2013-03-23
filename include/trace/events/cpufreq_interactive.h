@@ -6,6 +6,22 @@
 
 #include <linux/tracepoint.h>
 
+#define DECLARE_EVENT_CLASS(name, proto, args, tstruct, assign, print)
+#define DEFINE_EVENT(template, name, proto, args)               \
+        DECLARE_TRACE(name, PARAMS(proto), PARAMS(args))
+#define DEFINE_EVENT_PRINT(template, name, proto, args, print)  \
+        DECLARE_TRACE(name, PARAMS(proto), PARAMS(args))
+#define DEFINE_EVENT_CONDITION(template, name, proto,           \
+                               args, cond)                      \
+        DECLARE_TRACE_CONDITION(name, PARAMS(proto),            \
+                                PARAMS(args), PARAMS(cond))
+
+#define TRACE_EVENT_CONDITION(name, proto, args, cond,          \
+                              struct, assign, print)            \
+        DECLARE_TRACE_CONDITION(name, PARAMS(proto),            \
+                                PARAMS(args), PARAMS(cond))
+
+
 DECLARE_EVENT_CLASS(set,
 	TP_PROTO(u32 cpu_id, unsigned long targfreq,
 	         unsigned long actualfreq),
