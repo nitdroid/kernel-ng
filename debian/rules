@@ -25,7 +25,7 @@ LIBC_PACKAGE := linux-kernel-headers
 BUILDTMP := $(CURDIR)/debian/build
 KSRC := $(BUILDTMP)/$(PACKAGE)
 
-DEFCONFIG := rm581_defconfig
+DEFCONFIG := rm581_nitdroid_defconfig
 KVER = $(shell cat $(KSRC)/include/config/kernel.release 2> /dev/null)
 ARCH = $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 INCLUDE_HEADERS = acpi asm-generic asm-$(ARCH) config crypto drm Kbuild keys linux math-emu media mtd net pcmcia rdma rxrpc scsi sound trace video xen
@@ -116,8 +116,8 @@ install-kernel:
                 $(CURDIR)/debian/$(PACKAGE)/boot/config-$(KVER)
 #	installing kernel fiasco into kernel-flasher package
 	mkdir -p $(CURDIR)/debian/$(FLASHER_PACKAGE)/usr/share/osso/
-	fiasco-gen -o $(CURDIR)/debian/$(FLASHER_PACKAGE)/usr/share/osso/kernel-$(KVER).fiasco -g \
-			-k $(CURDIR)/debian/$(PACKAGE)/boot/zImage-$(KVER) -v $(RELEASE)
+#	fiasco-gen -o $(CURDIR)/debian/$(FLASHER_PACKAGE)/usr/share/osso/kernel-$(KVER).fiasco -g \
+#			-k $(CURDIR)/debian/$(PACKAGE)/boot/zImage-$(KVER) -v $(RELEASE)
 
 
 install-debug: install-modules
@@ -129,9 +129,9 @@ install-debug: install-modules
 	ln -sf /usr/lib/debug/vmlinux-$(KVER) $(CURDIR)/debian/$(DEBUG_PACKAGE)/lib/modules/$(KVER)/vmlinux
 
 	for f in $$(find $(CURDIR)/debian/$(MODULES_PACKAGE) -name "*.ko"); do \
-		objcopy --only-keep-debug $$f $(CURDIR)/debian/$(DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f); \
-		strip --remove-section=.comment --remove-section=.note --strip-unneeded  $(CURDIR)/debian/$(MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
-		objcopy --add-gnu-debuglink $(CURDIR)/debian/$(DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f) $(CURDIR)/debian/$(MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
+		$(CROSS_COMPILE)objcopy --only-keep-debug $$f $(CURDIR)/debian/$(DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f); \
+		$(CROSS_COMPILE)strip --remove-section=.comment --remove-section=.note --strip-unneeded  $(CURDIR)/debian/$(MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
+		$(CROSS_COMPILE)objcopy --add-gnu-debuglink $(CURDIR)/debian/$(DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f) $(CURDIR)/debian/$(MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
 	done
 
 install-modules-debug: install-debug
@@ -333,9 +333,9 @@ install-debugkernel-debug: install-debugkernel-modules
 	mkdir -p $(CURDIR)/debian/$(DEBUGKERNEL_DEBUG_PACKAGE)/lib/modules/$(KVER)
 
 	for f in $$(find $(CURDIR)/debian/$(DEBUGKERNEL_MODULES_PACKAGE) -name "*.ko"); do \
-		objcopy --only-keep-debug $$f $(CURDIR)/debian/$(DEBUGKERNEL_DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f); \
-		strip --remove-section=.comment --remove-section=.note --strip-unneeded  $(CURDIR)/debian/$(DEBUGKERNEL_MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
-		objcopy --add-gnu-debuglink $(CURDIR)/debian/$(DEBUGKERNEL_DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f) $(CURDIR)/debian/$(DEBUGKERNEL_MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
+		$(CROSS_COMPILE)objcopy --only-keep-debug $$f $(CURDIR)/debian/$(DEBUGKERNEL_DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f); \
+		$(CROSS_COMPILE)strip --remove-section=.comment --remove-section=.note --strip-unneeded  $(CURDIR)/debian/$(DEBUGKERNEL_MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
+		$(CROSS_COMPILE)objcopy --add-gnu-debuglink $(CURDIR)/debian/$(DEBUGKERNEL_DEBUG_PACKAGE)/usr/lib/debug/lib/modules/$(KVER)/$$(basename $$f) $(CURDIR)/debian/$(DEBUGKERNEL_MODULES_PACKAGE)/lib/modules/$(KVER)/$$(basename $$f); \
 	done
 
 install-debugkernel-modules-debug: install-debugkernel-debug
